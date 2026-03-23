@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model ContactRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  phone     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model QuoteRequest {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  phone          String?
+  houseSize      Float
+  consumption    Float?
+  recommendedKw  Float
+  suggestedPkg   String
+  estimatedPrice Float
+  createdAt      DateTime @default(now())
+}
