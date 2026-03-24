@@ -181,9 +181,7 @@ export default function EditService() {
 
   const removeFeature = (pkgIdx: number, fIdx: number) => {
     const next = [...packages];
-    next[pkgIdx].features = next[pkgIdx].features.filter(
-      (_, i) => i !== fIdx,
-    );
+    next[pkgIdx].features = next[pkgIdx].features.filter((_, i) => i !== fIdx);
     setPackages(next);
   };
 
@@ -217,9 +215,7 @@ export default function EditService() {
 
   const removeProduct = (pkgIdx: number, pIdx: number) => {
     const next = [...packages];
-    next[pkgIdx].products = next[pkgIdx].products.filter(
-      (_, i) => i !== pIdx,
-    );
+    next[pkgIdx].products = next[pkgIdx].products.filter((_, i) => i !== pIdx);
     setPackages(next);
   };
 
@@ -336,9 +332,7 @@ export default function EditService() {
                 <ImageUpload
                   label="Imagine serviciu (opțional)"
                   value={formData.image}
-                  onChange={(url) =>
-                    setFormData({ ...formData, image: url })
-                  }
+                  onChange={(url) => setFormData({ ...formData, image: url })}
                 />
               </div>
             </div>

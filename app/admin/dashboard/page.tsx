@@ -136,38 +136,7 @@ export default function AdminDashboard() {
               </div>
             </Link>
 
-            <Link
-              href="/admin/uploads"
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-8 w-8 text-green-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Încărcări
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Gestionează imaginile și fișierele
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Link>
+
           </div>
         </div>
       </div>
