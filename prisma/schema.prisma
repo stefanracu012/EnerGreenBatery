@@ -12,6 +12,8 @@ model ContactRequest {
   name      String
   phone     String
   message   String
+  service   String?
+  package   String?
   createdAt DateTime @default(now())
 }
 
@@ -25,4 +27,50 @@ model QuoteRequest {
   suggestedPkg   String
   estimatedPrice Float
   createdAt      DateTime @default(now())
+}
+
+model Service {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String   @unique
+  title       String
+  description String
+  icon        String
+  image       String?
+  packages    Package[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Package {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  serviceId   String   @db.ObjectId
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  kw          Float
+  price       Float
+  popular     Boolean  @default(false)
+  description String?
+  features    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String   @unique
+  title       String
+  description String
+  location    String
+  year        Int
+  images      String[]
+  gridSize    String   @default("1x1")
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminUser {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  email    String @unique
+  password String
 }

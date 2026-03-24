@@ -1,7 +1,12 @@
-const BOT_TOKEN = "8711033825:AAEIjoj5vNGjjuDGC1eYpq8pJYzUE0rCfQQ";
-const CHAT_ID = "-5076190951";
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 export async function sendTelegram(text: string): Promise<boolean> {
+  if (!BOT_TOKEN || !CHAT_ID) {
+    console.error("Telegram credentials not configured");
+    return false;
+  }
+
   try {
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
     const res = await fetch(url, {
