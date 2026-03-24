@@ -6,10 +6,11 @@ const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads')
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { name: string } }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const filepath = path.join(UPLOADS_DIR, params.name)
+    const { name } = await params
+    const filepath = path.join(UPLOADS_DIR, name)
 
     // Security check: ensure path is within UPLOADS_DIR
     if (!filepath.startsWith(UPLOADS_DIR)) {
