@@ -41,18 +41,29 @@ model Service {
   updatedAt   DateTime @updatedAt
 }
 
+type PackageProduct {
+  name       String
+  spec       String
+  quantity   Float
+  unit       String
+  unitPrice  Float
+  totalPrice Float
+}
+
 model Package {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  serviceId   String   @db.ObjectId
-  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  name        String
-  kw          Float
-  price       Float
-  popular     Boolean  @default(false)
-  description String?
-  features    String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  serviceId         String           @db.ObjectId
+  service           Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name              String
+  kw                Float
+  price             Float
+  popular           Boolean          @default(false)
+  description       String?
+  features          String[]
+  products          PackageProduct[]
+  installationPrice Float            @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Project {

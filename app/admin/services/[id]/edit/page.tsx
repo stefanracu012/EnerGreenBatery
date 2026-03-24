@@ -5,31 +5,58 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
 
-interface Service {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  icon: string;
-  image?: string;
-  packages: Package[];
+interface PackageProduct {
+  name: string;
+  spec: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 interface Package {
-  id: string;
+  id?: string;
   name: string;
   kw: number;
   price: number;
   popular: boolean;
-  description?: string;
+  description: string;
   features: string[];
+  products: PackageProduct[];
+  installationPrice: number;
 }
+
+const emptyProduct: PackageProduct = {
+  name: "",
+  spec: "",
+  quantity: 0,
+  unit: "buc",
+  unitPrice: 0,
+  totalPrice: 0,
+};
+
+const emptyPackage: Package = {
+  name: "",
+  kw: 0,
+  price: 0,
+  popular: false,
+  description: "",
+  features: [""],
+  products: [{ ...emptyProduct }],
+  installationPrice: 0,
+};
 
 export default function EditService() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<{
+    slug: string;
+    title: string;
+    description: string;
+    icon: string;
+    image: string;
+  } | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
   const router = useRouter();
   const params = useParams();
@@ -47,7 +74,7 @@ export default function EditService() {
       } else {
         setIsAuthenticated(true);
       }
-    } catch (error) {
+    } catch {
       router.push("/admin");
     }
   };
@@ -64,7 +91,14 @@ export default function EditService() {
           icon: data.icon,
           image: data.image || "",
         });
-        setPackages(data.packages);
+        setPackages(
+          data.packages.map((p: Package) => ({
+            ...p,
+            products: p.products || [],
+            installationPrice: p.installationPrice || 0,
+            features: p.features || [],
+          })),
+        );
       }
     } catch (error) {
       console.error("Error loading service:", error);
@@ -78,12 +112,20 @@ export default function EditService() {
     setSubmitting(true);
 
     try {
+      // Strip id from packages before sending (API deletes + recreates)
+      const cleanPackages = packages
+        .filter((p) => p.name.trim() !== "")
+        .map(({ id: _id, ...rest }) => ({
+          ...rest,
+          products: rest.products.filter((pr) => pr.name.trim() !== ""),
+        }));
+
       const res = await fetch(`/api/services/${params.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          packages: packages.filter((p) => p.name.trim() !== ""),
+          packages: cleanPackages,
         }),
       });
 
@@ -92,52 +134,93 @@ export default function EditService() {
       } else {
         alert("Eroare la salvarea serviciului");
       }
-    } catch (error) {
+    } catch {
       alert("Eroare la salvarea serviciului");
     } finally {
       setSubmitting(false);
     }
   };
 
+  /* ── Package helpers ── */
   const addPackage = () => {
     setPackages([
       ...packages,
-      {
-        id: "",
-        name: "",
-        kw: 0,
-        price: 0,
-        popular: false,
-        description: "",
-        features: [""],
-      },
+      { ...emptyPackage, features: [""], products: [{ ...emptyProduct }] },
     ]);
   };
 
-  const updatePackage = (index: number, field: keyof Package, value: any) => {
-    const newPackages = [...packages];
-    newPackages[index] = { ...newPackages[index], [field]: value };
-    setPackages(newPackages);
-  };
-
-  const addFeature = (packageIndex: number) => {
-    const newPackages = [...packages];
-    newPackages[packageIndex].features.push("");
-    setPackages(newPackages);
-  };
-
-  const updateFeature = (
-    packageIndex: number,
-    featureIndex: number,
-    value: string,
+  const updatePackage = (
+    index: number,
+    field: keyof Package,
+    value: unknown,
   ) => {
-    const newPackages = [...packages];
-    newPackages[packageIndex].features[featureIndex] = value;
-    setPackages(newPackages);
+    const next = [...packages];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    next[index] = { ...next[index], [field]: value } as any;
+    setPackages(next);
   };
 
   const removePackage = (index: number) => {
     setPackages(packages.filter((_, i) => i !== index));
+  };
+
+  /* ── Feature helpers ── */
+  const addFeature = (pkgIdx: number) => {
+    const next = [...packages];
+    next[pkgIdx].features = [...next[pkgIdx].features, ""];
+    setPackages(next);
+  };
+
+  const updateFeature = (pkgIdx: number, fIdx: number, value: string) => {
+    const next = [...packages];
+    next[pkgIdx].features = next[pkgIdx].features.map((f, i) =>
+      i === fIdx ? value : f,
+    );
+    setPackages(next);
+  };
+
+  const removeFeature = (pkgIdx: number, fIdx: number) => {
+    const next = [...packages];
+    next[pkgIdx].features = next[pkgIdx].features.filter(
+      (_, i) => i !== fIdx,
+    );
+    setPackages(next);
+  };
+
+  /* ── Product helpers ── */
+  const addProduct = (pkgIdx: number) => {
+    const next = [...packages];
+    next[pkgIdx].products = [...next[pkgIdx].products, { ...emptyProduct }];
+    setPackages(next);
+  };
+
+  const updateProduct = (
+    pkgIdx: number,
+    pIdx: number,
+    field: keyof PackageProduct,
+    value: unknown,
+  ) => {
+    const next = [...packages];
+    const product = { ...next[pkgIdx].products[pIdx], [field]: value };
+
+    // Auto-compute totalPrice when quantity or unitPrice changes
+    if (field === "quantity" || field === "unitPrice") {
+      product.totalPrice =
+        Math.round(product.quantity * product.unitPrice * 100) / 100;
+    }
+
+    next[pkgIdx].products = next[pkgIdx].products.map((p, i) =>
+      i === pIdx ? product : p,
+    );
+    setPackages(next);
+  };
+
+  const removeProduct = (pkgIdx: number, pIdx: number) => {
+    const next = [...packages];
+    next[pkgIdx].products = next[pkgIdx].products.filter(
+      (_, i) => i !== pIdx,
+    );
+    setPackages(next);
   };
 
   if (loading || !isAuthenticated || !formData) {
@@ -165,238 +248,470 @@ export default function EditService() {
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            Editează Serviciu
-          </h1>
+      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">
+          Editează Serviciu
+        </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white shadow px-4 py-5 sm:p-6">
-              <div className="grid grid-cols-6 gap-6">
-                <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Slug
-                  </label>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* ── Detalii Serviciu ── */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
+              Detalii Serviciu
+            </h2>
+
+            <div className="grid grid-cols-6 gap-6">
+              <div className="col-span-6 sm:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Slug
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  value={formData.slug}
+                  onChange={(e) =>
+                    setFormData({ ...formData, slug: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="col-span-6 sm:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Titlu
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descriere
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="col-span-6 sm:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Icon (emoji)
+                </label>
+                <div className="flex gap-2">
                   <input
                     type="text"
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                    value={formData.slug}
-                    onChange={(e) =>
-                      setFormData({ ...formData, slug: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Titlu
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="col-span-6">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Descriere
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Icon (emoji)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    className="block flex-1 border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
                     value={formData.icon}
                     onChange={(e) =>
                       setFormData({ ...formData, icon: e.target.value })
                     }
                   />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <ImageUpload
-                    label="Imagine serviciu (opțional)"
-                    value={formData.image}
-                    onChange={(url) =>
-                      setFormData({ ...formData, image: url })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white shadow px-4 py-5 sm:p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Pachete</h3>
-                <button
-                  type="button"
-                  onClick={addPackage}
-                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                >
-                  Adaugă pachet
-                </button>
-              </div>
-
-              {packages.map((pkg, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-md p-4 mb-4"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-md font-medium text-gray-900">
-                      Pachet {index + 1}
-                    </h4>
+                  {formData.icon && (
                     <button
                       type="button"
-                      onClick={() => removePackage(index)}
+                      onClick={() => setFormData({ ...formData, icon: "" })}
+                      className="px-3 py-2 border border-red-300 rounded-md text-red-600 hover:bg-red-50 text-sm font-medium"
+                      title="Șterge icon"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="col-span-6 sm:col-span-3">
+                <ImageUpload
+                  label="Imagine serviciu (opțional)"
+                  value={formData.image}
+                  onChange={(url) =>
+                    setFormData({ ...formData, image: url })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Pachete ── */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Pachete</h2>
+              <button
+                type="button"
+                onClick={addPackage}
+                className="px-4 py-2 text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+              >
+                + Adaugă pachet
+              </button>
+            </div>
+
+            <div className="space-y-8">
+              {packages.map((pkg, pkgIdx) => (
+                <div
+                  key={pkgIdx}
+                  className="border-2 border-gray-200 rounded-lg overflow-hidden"
+                >
+                  {/* Package header */}
+                  <div className="bg-gray-50 px-5 py-3 flex justify-between items-center border-b border-gray-200">
+                    <h3 className="text-md font-semibold text-gray-800">
+                      📦 Pachet {pkgIdx + 1}
+                      {pkg.name ? ` — ${pkg.name}` : ""}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => removePackage(pkgIdx)}
                       className="px-3 py-1 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
                     >
-                      Șterge
+                      Șterge pachet
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-6 gap-6">
-                    <div className="col-span-6 sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Nume
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        value={pkg.name}
-                        onChange={(e) =>
-                          updatePackage(index, "name", e.target.value)
-                        }
-                      />
+                  <div className="p-5 space-y-6">
+                    {/* Basic fields */}
+                    <div className="grid grid-cols-12 gap-4">
+                      <div className="col-span-12 sm:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nume
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          value={pkg.name}
+                          onChange={(e) =>
+                            updatePackage(pkgIdx, "name", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="col-span-4 sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          KW
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          value={pkg.kw}
+                          onChange={(e) =>
+                            updatePackage(
+                              pkgIdx,
+                              "kw",
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="col-span-4 sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Echipamente (€)
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          value={pkg.price}
+                          onChange={(e) =>
+                            updatePackage(
+                              pkgIdx,
+                              "price",
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="col-span-4 sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Instalare (€)
+                        </label>
+                        <input
+                          type="number"
+                          className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          value={pkg.installationPrice}
+                          onChange={(e) =>
+                            updatePackage(
+                              pkgIdx,
+                              "installationPrice",
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="col-span-12 sm:col-span-3">
+                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                          Total pachet (€)
+                        </label>
+                        <div className="block w-full bg-green-50 border border-green-200 rounded-md px-3 py-2 sm:text-sm font-bold text-green-700">
+                          {(pkg.price + pkg.installationPrice).toLocaleString(
+                            "ro-RO",
+                          )}{" "}
+                          €
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="col-span-6 sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        KW
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        value={pkg.kw}
-                        onChange={(e) =>
-                          updatePackage(index, "kw", parseFloat(e.target.value))
-                        }
-                      />
-                    </div>
-
-                    <div className="col-span-6 sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Preț (RON)
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        value={pkg.price}
-                        onChange={(e) =>
-                          updatePackage(
-                            index,
-                            "price",
-                            parseFloat(e.target.value),
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="col-span-6">
-                      <label className="block text-sm font-medium text-gray-700">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Descriere
                       </label>
                       <input
                         type="text"
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        value={pkg.description}
+                        className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        value={pkg.description || ""}
                         onChange={(e) =>
-                          updatePackage(index, "description", e.target.value)
+                          updatePackage(pkgIdx, "description", e.target.value)
                         }
                       />
                     </div>
 
-                    <div className="col-span-6">
-                      <label className="flex items-center">
+                    <div>
+                      <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           className="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50"
                           checked={pkg.popular}
                           onChange={(e) =>
-                            updatePackage(index, "popular", e.target.checked)
+                            updatePackage(pkgIdx, "popular", e.target.checked)
                           }
                         />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Popular
+                        <span className="text-sm font-medium text-gray-700">
+                          ⭐ Pachet popular
                         </span>
                       </label>
                     </div>
 
-                    <div className="col-span-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Caracteristici
-                      </label>
-                      {pkg.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex mb-2">
-                          <input
-                            type="text"
-                            className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                            value={feature}
-                            onChange={(e) =>
-                              updateFeature(index, featureIndex, e.target.value)
-                            }
-                            placeholder="Caracteristică..."
-                          />
+                    {/* ── Produse (tabel) ── */}
+                    <div className="border-t border-gray-200 pt-5">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                          🛒 Produse
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => addProduct(pkgIdx)}
+                          className="px-3 py-1 text-xs font-medium rounded-md text-green-700 border border-green-300 hover:bg-green-50"
+                        >
+                          + Adaugă produs
+                        </button>
+                      </div>
+
+                      {pkg.products.length > 0 && (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-3 py-2 text-left font-medium text-gray-600">
+                                  Produs
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-600">
+                                  Specificație
+                                </th>
+                                <th className="px-3 py-2 text-right font-medium text-gray-600 w-20">
+                                  Cant.
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
+                                  Unit.
+                                </th>
+                                <th className="px-3 py-2 text-right font-medium text-gray-600 w-24">
+                                  Preț/u (€)
+                                </th>
+                                <th className="px-3 py-2 text-right font-medium text-gray-600 w-24">
+                                  Total (€)
+                                </th>
+                                <th className="px-3 py-2 w-10"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {pkg.products.map((prod, pIdx) => (
+                                <tr key={pIdx} className="hover:bg-gray-50">
+                                  <td className="px-2 py-1.5">
+                                    <input
+                                      type="text"
+                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
+                                      value={prod.name}
+                                      onChange={(e) =>
+                                        updateProduct(
+                                          pkgIdx,
+                                          pIdx,
+                                          "name",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="ex: Panou fotovoltaic"
+                                    />
+                                  </td>
+                                  <td className="px-2 py-1.5">
+                                    <input
+                                      type="text"
+                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
+                                      value={prod.spec}
+                                      onChange={(e) =>
+                                        updateProduct(
+                                          pkgIdx,
+                                          pIdx,
+                                          "spec",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="ex: 550W monocristalin"
+                                    />
+                                  </td>
+                                  <td className="px-2 py-1.5">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-green-500 focus:border-green-500"
+                                      value={prod.quantity}
+                                      onChange={(e) =>
+                                        updateProduct(
+                                          pkgIdx,
+                                          pIdx,
+                                          "quantity",
+                                          parseFloat(e.target.value) || 0,
+                                        )
+                                      }
+                                    />
+                                  </td>
+                                  <td className="px-2 py-1.5">
+                                    <input
+                                      type="text"
+                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
+                                      value={prod.unit}
+                                      onChange={(e) =>
+                                        updateProduct(
+                                          pkgIdx,
+                                          pIdx,
+                                          "unit",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="buc"
+                                    />
+                                  </td>
+                                  <td className="px-2 py-1.5">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-green-500 focus:border-green-500"
+                                      value={prod.unitPrice}
+                                      onChange={(e) =>
+                                        updateProduct(
+                                          pkgIdx,
+                                          pIdx,
+                                          "unitPrice",
+                                          parseFloat(e.target.value) || 0,
+                                        )
+                                      }
+                                    />
+                                  </td>
+                                  <td className="px-2 py-1.5">
+                                    <div className="w-full bg-gray-100 border border-gray-200 rounded px-2 py-1 text-sm text-right font-medium text-gray-700">
+                                      {prod.totalPrice.toLocaleString("ro-RO")}
+                                    </div>
+                                  </td>
+                                  <td className="px-1 py-1.5 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeProduct(pkgIdx, pIdx)
+                                      }
+                                      className="text-red-500 hover:text-red-700 text-lg leading-none"
+                                      title="Șterge produs"
+                                    >
+                                      ✕
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-green-50">
+                              <tr>
+                                <td
+                                  colSpan={5}
+                                  className="px-3 py-2 text-right font-semibold text-gray-700"
+                                >
+                                  Subtotal echipamente:
+                                </td>
+                                <td className="px-3 py-2 text-right font-bold text-green-700">
+                                  {pkg.products
+                                    .reduce((s, p) => s + p.totalPrice, 0)
+                                    .toLocaleString("ro-RO")}{" "}
+                                  €
+                                </td>
+                                <td></td>
+                              </tr>
+                            </tfoot>
+                          </table>
                         </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => addFeature(index)}
-                        className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        + Adaugă caracteristică
-                      </button>
+                      )}
+                    </div>
+
+                    {/* ── Caracteristici ── */}
+                    <div className="border-t border-gray-200 pt-5">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                          📋 Caracteristici
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => addFeature(pkgIdx)}
+                          className="px-3 py-1 text-xs font-medium rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        >
+                          + Adaugă
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {pkg.features.map((feature, fIdx) => (
+                          <div key={fIdx} className="flex gap-2">
+                            <input
+                              type="text"
+                              className="flex-1 border border-gray-300 rounded-md shadow-sm px-3 py-1.5 text-sm focus:ring-green-500 focus:border-green-500"
+                              value={feature}
+                              onChange={(e) =>
+                                updateFeature(pkgIdx, fIdx, e.target.value)
+                              }
+                              placeholder="Caracteristică..."
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeFeature(pkgIdx, fIdx)}
+                              className="px-2 text-red-400 hover:text-red-600 text-lg"
+                              title="Șterge"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-              >
-                {submitting ? "Se salvează..." : "Salvează serviciu"}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* ── Submit ── */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 shadow-sm"
+            >
+              {submitting ? "Se salvează..." : "💾 Salvează serviciu"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
