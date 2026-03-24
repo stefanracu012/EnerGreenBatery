@@ -52,7 +52,6 @@ export default function EditService() {
     slug: string;
     title: string;
     description: string;
-    icon: string;
     image: string;
   } | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
@@ -86,7 +85,6 @@ export default function EditService() {
           slug: data.slug,
           title: data.title,
           description: data.description,
-          icon: data.icon,
           image: data.image || "",
         });
         setPackages(
@@ -276,32 +274,6 @@ export default function EditService() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                 />
-              </div>
-
-              <div className="col-span-6 sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Icon (emoji)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    className="block flex-1 border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                    value={formData.icon}
-                    onChange={(e) =>
-                      setFormData({ ...formData, icon: e.target.value })
-                    }
-                  />
-                  {formData.icon && (
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, icon: "" })}
-                      className="px-3 py-2 border border-red-300 rounded-md text-red-600 hover:bg-red-50 text-sm font-medium"
-                      title="Șterge icon"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
               </div>
 
               <div className="col-span-6 sm:col-span-3">

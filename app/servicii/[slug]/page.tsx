@@ -1,14 +1,18 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { services } from "@/lib/data";
+import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/* Revalidate every 60 s so admin edits appear quickly */
+export const revalidate = 60;
+
 export async function generateStaticParams() {
+  const services = await prisma.service.findMany({ select: { slug: true } });
   return services.map((s) => ({ slug: s.slug }));
 }
 
@@ -16,32 +20,65 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const service = services.find((s) => s.slug === slug);
+  const service = await prisma.service.findUnique({ where: { slug } });
   if (!service) return {};
   return {
     title: `${service.title} — EnerGreenBatery`,
-    description: service.shortDescription,
+    description: service.description,
   };
+}
+
+/* ── Helper: derive display values from DB package ── */
+function enrichPackage(pkg: {
+  id: string;
+  name: string;
+  kw: number;
+  price: number;
+  popular: boolean;
+  description: string | null;
+  installationPrice: number;
+  products: {
+    name: string;
+    spec: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+  }[];
+}) {
+  const productsTotal = pkg.products.reduce((s, p) => s + p.totalPrice, 0);
+  const totalPrice = productsTotal + pkg.installationPrice;
+  const production = Math.round(pkg.kw * 1200);
+  const areaNeeded = Math.round(pkg.kw * 5.2);
+  const pricePerM2 = areaNeeded > 0 ? Math.round(totalPrice / areaNeeded) : 0;
+  return { ...pkg, totalPrice, production, areaNeeded, pricePerM2 };
 }
 
 export default async function ServicePage({ params }: PageProps) {
   const { slug } = await params;
-  const service = services.find((s) => s.slug === slug);
+  const service = await prisma.service.findUnique({
+    where: { slug },
+    include: { packages: true },
+  });
   if (!service) notFound();
+
+  const packages = service.packages.map(enrichPackage);
 
   return (
     <div>
       {/* Header */}
       <section className="relative h-[60vh] lg:h-[70vh] overflow-hidden">
-        <Image
-          src={service.image}
-          alt={service.title}
-          fill
-          className="object-cover"
-          sizes="100vw"
-          quality={90}
-          priority
-        />
+        {service.image && (
+          <Image
+            src={service.image}
+            alt={service.title}
+            fill
+            className="object-cover"
+            sizes="100vw"
+            quality={90}
+            priority
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
         <div className="absolute bottom-0 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-10 lg:pb-14">
@@ -55,7 +92,7 @@ export default async function ServicePage({ params }: PageProps) {
               {service.title}
             </h1>
             <p className="mt-4 text-lg text-white/80 max-w-2xl leading-relaxed">
-              {service.fullDescription}
+              {service.description}
             </p>
           </div>
         </div>
@@ -78,7 +115,7 @@ export default async function ServicePage({ params }: PageProps) {
           </div>
 
           <div className="space-y-20">
-            {service.packages.map((pkg) => (
+            {packages.map((pkg) => (
               <div
                 key={pkg.id}
                 className={`rounded-2xl border ${
@@ -110,7 +147,7 @@ export default async function ServicePage({ params }: PageProps) {
                           pkg.popular ? "text-white/70" : "text-gray-500"
                         }`}
                       >
-                        {pkg.subtitle}
+                        {pkg.description}
                       </p>
                     </div>
                     <div className="flex items-baseline gap-6">

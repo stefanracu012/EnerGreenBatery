@@ -1,11 +1,41 @@
 "use client";
 
 import { useState } from "react";
-import type { ServiceCategory } from "@/lib/data";
 import { fmt } from "@/lib/format";
 
+interface PackageProduct {
+  name: string;
+  spec: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+interface ServicePackage {
+  id: string;
+  name: string;
+  subtitle: string;
+  capacity: number;
+  production: number;
+  areaNeeded: number;
+  pricePerM2: number;
+  products: PackageProduct[];
+  installationPrice: number;
+  totalPrice: number;
+  popular?: boolean;
+}
+
+export interface ServiceData {
+  slug: string;
+  title: string;
+  fullDescription: string;
+  image: string;
+  packages: ServicePackage[];
+}
+
 interface ServiceContentProps {
-  service: ServiceCategory;
+  service: ServiceData;
   index: number;
   isEven: boolean;
 }

@@ -2,9 +2,47 @@ import Image from "next/image";
 import Link from "next/link";
 import ScrollReveal from "./ScrollReveal";
 import ServiceContent from "./ServiceContent";
-import { services } from "@/lib/data";
+import { prisma } from "@/lib/prisma";
 
-export default function Services() {
+/* ── Helper: derive display values from DB package ── */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function enrichPackage(pkg: any) {
+  const products = pkg.products ?? [];
+  const productsTotal = products.reduce((s: number, p: { totalPrice: number }) => s + p.totalPrice, 0);
+  const installationPrice = pkg.installationPrice ?? 0;
+  const totalPrice = productsTotal + installationPrice;
+  const production = Math.round(pkg.kw * 1200);
+  const areaNeeded = Math.round(pkg.kw * 5.2);
+  const pricePerM2 = areaNeeded > 0 ? Math.round(totalPrice / areaNeeded) : 0;
+  return {
+    id: pkg.id as string,
+    name: pkg.name as string,
+    subtitle: (pkg.description ?? "") as string,
+    capacity: pkg.kw as number,
+    production,
+    areaNeeded,
+    pricePerM2,
+    products,
+    installationPrice,
+    totalPrice,
+    popular: pkg.popular as boolean,
+  };
+}
+
+export default async function Services() {
+  const dbServices = await prisma.service.findMany({
+    include: { packages: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const services = dbServices.map((s) => ({
+    slug: s.slug,
+    title: s.title,
+    fullDescription: s.description,
+    image: s.image ?? "",
+    packages: s.packages.map(enrichPackage),
+  }));
+
   return (
     <section id="servicii">
       {/* Header */}
