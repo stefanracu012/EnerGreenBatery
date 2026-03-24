@@ -20,7 +20,6 @@ interface Package {
   price: number;
   popular: boolean;
   description: string;
-  features: string[];
   products: PackageProduct[];
   installationPrice: number;
 }
@@ -40,7 +39,6 @@ const emptyPackage: Package = {
   price: 0,
   popular: false,
   description: "",
-  features: [""],
   products: [{ ...emptyProduct }],
   installationPrice: 0,
 };
@@ -56,7 +54,7 @@ export default function NewService() {
     image: "",
   });
   const [packages, setPackages] = useState<Package[]>([
-    { ...emptyPackage, features: [""], products: [{ ...emptyProduct }] },
+    { ...emptyPackage, products: [{ ...emptyProduct }] },
   ]);
   const router = useRouter();
 
@@ -112,7 +110,7 @@ export default function NewService() {
   const addPackage = () => {
     setPackages([
       ...packages,
-      { ...emptyPackage, features: [""], products: [{ ...emptyProduct }] },
+      { ...emptyPackage, products: [{ ...emptyProduct }] },
     ]);
   };
 
@@ -129,27 +127,6 @@ export default function NewService() {
 
   const removePackage = (index: number) => {
     setPackages(packages.filter((_, i) => i !== index));
-  };
-
-  /* ── Feature helpers ── */
-  const addFeature = (pkgIdx: number) => {
-    const next = [...packages];
-    next[pkgIdx].features = [...next[pkgIdx].features, ""];
-    setPackages(next);
-  };
-
-  const updateFeature = (pkgIdx: number, fIdx: number, value: string) => {
-    const next = [...packages];
-    next[pkgIdx].features = next[pkgIdx].features.map((f, i) =>
-      i === fIdx ? value : f,
-    );
-    setPackages(next);
-  };
-
-  const removeFeature = (pkgIdx: number, fIdx: number) => {
-    const next = [...packages];
-    next[pkgIdx].features = next[pkgIdx].features.filter((_, i) => i !== fIdx);
-    setPackages(next);
   };
 
   /* ── Product helpers ── */
@@ -621,45 +598,7 @@ export default function NewService() {
                       )}
                     </div>
 
-                    {/* ── Caracteristici ── */}
-                    <div className="border-t border-gray-200 pt-5">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
-                          <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
-                          Caracteristici
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => addFeature(pkgIdx)}
-                          className="px-3 py-1 text-xs font-medium rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50"
-                        >
-                          + Adaugă
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {pkg.features.map((feature, fIdx) => (
-                          <div key={fIdx} className="flex gap-2">
-                            <input
-                              type="text"
-                              className="flex-1 border border-gray-300 rounded-md shadow-sm px-3 py-1.5 text-sm focus:ring-green-500 focus:border-green-500"
-                              value={feature}
-                              onChange={(e) =>
-                                updateFeature(pkgIdx, fIdx, e.target.value)
-                              }
-                              placeholder="Caracteristică..."
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeFeature(pkgIdx, fIdx)}
-                              className="px-2 text-red-400 hover:text-red-600 text-lg"
-                              title="Șterge"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               ))}

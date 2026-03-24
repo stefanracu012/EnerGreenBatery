@@ -37,6 +37,26 @@ export async function PUT(
       where: { serviceId: id }
     })
 
+    // Sanitize packages – only keep fields the schema accepts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cleanPackages = (packages ?? []).map((p: any) => ({
+      name: p.name,
+      kw: Number(p.kw) || 0,
+      price: Number(p.price) || 0,
+      popular: Boolean(p.popular),
+      description: p.description || '',
+      features: p.features ?? [],
+      products: (p.products ?? []).map((pr: any) => ({
+        name: pr.name,
+        spec: pr.spec || '',
+        quantity: Number(pr.quantity) || 0,
+        unit: pr.unit || 'buc',
+        unitPrice: Number(pr.unitPrice) || 0,
+        totalPrice: Number(pr.totalPrice) || 0,
+      })),
+      installationPrice: Number(p.installationPrice) || 0,
+    }))
+
     // Update service and create new packages
     const service = await prisma.service.update({
       where: { id },
@@ -47,7 +67,7 @@ export async function PUT(
         icon,
         image,
         packages: {
-          create: packages
+          create: cleanPackages
         }
       },
       include: {
