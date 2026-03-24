@@ -78,13 +78,14 @@ export default function AdminUploads() {
     e.target.value = "";
   };
 
-  const deleteFile = async (name: string) => {
+  const deleteFile = async (name: string, url: string) => {
     if (!confirm("Ești sigur că vrei să ștergi acest fișier?")) return;
 
     try {
-      const res = await fetch(`/api/admin/uploads/${name}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/admin/uploads/${encodeURIComponent(name)}?url=${encodeURIComponent(url)}`,
+        { method: "DELETE" },
+      );
       if (res.ok) {
         setFiles(files.filter((f) => f.name !== name));
       }
@@ -214,7 +215,7 @@ export default function AdminUploads() {
                           Copiază URL
                         </button>
                         <button
-                          onClick={() => deleteFile(file.name)}
+                          onClick={() => deleteFile(file.name, file.url)}
                           className="px-3 py-1 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
                         >
                           Șterge

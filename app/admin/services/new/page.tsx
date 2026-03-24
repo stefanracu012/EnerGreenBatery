@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 interface Package {
   name: string;
@@ -213,15 +214,11 @@ export default function NewService() {
                 </div>
 
                 <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Imagine URL (opțional)
-                  </label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  <ImageUpload
+                    label="Imagine serviciu (opțional)"
                     value={formData.image}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
+                    onChange={(url) =>
+                      setFormData({ ...formData, image: url })
                     }
                   />
                 </div>

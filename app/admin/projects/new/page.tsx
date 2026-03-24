@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default function NewProject() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -243,23 +244,25 @@ export default function NewProject() {
               </div>
 
               {formData.images.map((image, index) => (
-                <div key={index} className="flex gap-2 mb-3">
-                  <input
-                    type="text"
-                    placeholder="URL imagine..."
-                    className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                    value={image}
-                    onChange={(e) => updateImage(index, e.target.value)}
-                  />
-                  {formData.images.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="px-3 py-1 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
-                    >
-                      Șterge
-                    </button>
-                  )}
+                <div key={index} className="mb-3">
+                  <div className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <ImageUpload
+                        label={`Imagine ${index + 1}`}
+                        value={image}
+                        onChange={(url) => updateImage(index, url)}
+                      />
+                    </div>
+                    {formData.images.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="mt-6 px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+                      >
+                        Șterge
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

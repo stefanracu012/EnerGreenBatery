@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
-
-const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads')
+import { del } from '@vercel/blob'
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const { name } = await params
-    const filepath = path.join(UPLOADS_DIR, name)
+    await params
 
-    // Security check: ensure path is within UPLOADS_DIR
-    if (!filepath.startsWith(UPLOADS_DIR)) {
-      return NextResponse.json({ error: 'Invalid path' }, { status: 400 })
+    // The blob URL is passed as a query param
+    const url = request.nextUrl.searchParams.get('url')
+    if (!url) {
+      return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
-    await fs.unlink(filepath)
+    await del(url)
 
     return NextResponse.json({ success: true })
   } catch (error) {
