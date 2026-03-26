@@ -177,9 +177,7 @@ export default function AdminProjects() {
                     <p className="text-sm text-gray-500">
                       {project.category} • {project.capacity} • {project.year}
                     </p>
-                    <p className="text-sm text-gray-400">
-                      {project.location}
-                    </p>
+                    <p className="text-sm text-gray-400">{project.location}</p>
                     <div className="flex items-center space-x-2 mt-4">
                       <Link
                         href={`/admin/projects/${project.id}/edit`}

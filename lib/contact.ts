@@ -1,8 +1,8 @@
 export const PHONE = "+40748613245";
 export const PHONE_DISPLAY = "+40 748 613 245";
 export const EMAIL = "energreenbatery@gmail.com";
-export const ADDRESS = "Sat Reuseni, Com. Udești, Jud. Suceava";
+export const ADDRESS = "Str. Principală Nr. 162, Reuseni, Udești, Jud. Suceava";
 export const MAPS_URL =
-  "https://www.google.com/maps/search/Jud.+Suceava,+Sat+Reuseni,+Comuna+Ude%C8%99ti,+Strada+PRINCIPAL,+Nr.+162/@47.579796,26.3607287,2997m/data=!3m2!1e3!4b1?entry=ttu";
+  "https://www.google.com/maps/place/EnergreenbateryS.R.L.,+Strada+Principal%C4%83+162,+727535+Suceava,+Rom%C3%A2nia/@47.579796,26.3607287,17z/data=!4m2!3m1!1s0x4734fdea5dfa0263:0xa34b832a1a3c7941";
 export const WHATSAPP_URL = `https://wa.me/${PHONE.replace("+", "")}`;
 export const VIBER_URL = `viber://chat?number=${PHONE.replace("+", "%2B")}`;

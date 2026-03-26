@@ -43,9 +43,7 @@ export default function EditProject() {
           year: data.year,
           images: data.images?.length ? data.images : [""],
           details: data.details?.length ? data.details : [""],
-          specs: data.specs?.length
-            ? data.specs
-            : [{ label: "", value: "" }],
+          specs: data.specs?.length ? data.specs : [{ label: "", value: "" }],
           gridSize: data.gridSize || "normal",
           featured: data.featured || false,
         });
@@ -69,7 +67,7 @@ export default function EditProject() {
           images: formData.images.filter((img: string) => img.trim() !== ""),
           details: formData.details.filter((d: string) => d.trim() !== ""),
           specs: formData.specs.filter(
-            (s: { label: string }) => s.label.trim() !== ""
+            (s: { label: string }) => s.label.trim() !== "",
           ),
         }),
       });
@@ -120,7 +118,7 @@ export default function EditProject() {
     setFormData({
       ...formData,
       specs: formData.specs.filter(
-        (_: { label: string; value: string }, idx: number) => idx !== i
+        (_: { label: string; value: string }, idx: number) => idx !== i,
       ),
     });
   const updateSpec = (i: number, field: "label" | "value", val: string) => {
@@ -400,10 +398,7 @@ export default function EditProject() {
                 </button>
               </div>
               {formData.specs.map(
-                (
-                  spec: { label: string; value: string },
-                  index: number
-                ) => (
+                (spec: { label: string; value: string }, index: number) => (
                   <div key={index} className="flex gap-2 items-center mb-3">
                     <input
                       type="text"
@@ -433,7 +428,7 @@ export default function EditProject() {
                       </button>
                     )}
                   </div>
-                )
+                ),
               )}
             </div>
 

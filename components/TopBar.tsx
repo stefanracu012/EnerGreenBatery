@@ -162,7 +162,7 @@ export default function TopBar() {
             />
           </svg>
           <span className="hidden md:inline">
-            Sat Reuseni, Com. Udești, Suceava
+            Str. Principală 162, Reuseni, Udești, Suceava
           </span>
           <span className="md:hidden">Locație</span>
         </a>
