@@ -8,7 +8,10 @@ import { prisma } from "@/lib/prisma";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function enrichPackage(pkg: any) {
   const products = pkg.products ?? [];
-  const productsTotal = products.reduce((s: number, p: { totalPrice: number }) => s + p.totalPrice, 0);
+  const productsTotal = products.reduce(
+    (s: number, p: { totalPrice: number }) => s + p.totalPrice,
+    0,
+  );
   const installationPrice = pkg.installationPrice ?? 0;
   const totalPrice = productsTotal + installationPrice;
   const production = Math.round(pkg.kw * 1200);

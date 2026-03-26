@@ -21,12 +21,9 @@ export default function EditProject() {
   const checkAuth = async () => {
     try {
       const res = await fetch("/api/admin/check");
-      if (!res.ok) {
-        router.push("/admin");
-      } else {
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
+      if (!res.ok) router.push("/admin");
+      else setIsAuthenticated(true);
+    } catch {
       router.push("/admin");
     }
   };
@@ -36,7 +33,22 @@ export default function EditProject() {
       const res = await fetch(`/api/projects/${params.id}`);
       if (res.ok) {
         const data = await res.json();
-        setFormData(data);
+        setFormData({
+          slug: data.slug,
+          title: data.title,
+          category: data.category || "Rezidențial",
+          capacity: data.capacity || "",
+          description: data.description,
+          location: data.location,
+          year: data.year,
+          images: data.images?.length ? data.images : [""],
+          details: data.details?.length ? data.details : [""],
+          specs: data.specs?.length
+            ? data.specs
+            : [{ label: "", value: "" }],
+          gridSize: data.gridSize || "normal",
+          featured: data.featured || false,
+        });
       }
     } catch (error) {
       console.error("Error loading project:", error);
@@ -48,7 +60,6 @@ export default function EditProject() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
       const res = await fetch(`/api/projects/${params.id}`, {
         method: "PUT",
@@ -56,39 +67,66 @@ export default function EditProject() {
         body: JSON.stringify({
           ...formData,
           images: formData.images.filter((img: string) => img.trim() !== ""),
+          details: formData.details.filter((d: string) => d.trim() !== ""),
+          specs: formData.specs.filter(
+            (s: { label: string }) => s.label.trim() !== ""
+          ),
         }),
       });
-
-      if (res.ok) {
-        router.push("/admin/projects");
-      } else {
-        alert("Eroare la salvarea proiectului");
-      }
-    } catch (error) {
+      if (res.ok) router.push("/admin/projects");
+      else alert("Eroare la salvarea proiectului");
+    } catch {
       alert("Eroare la salvarea proiectului");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const addImage = () => {
+  /* ── Image helpers ── */
+  const addImage = () =>
+    setFormData({ ...formData, images: [...formData.images, ""] });
+  const removeImage = (i: number) =>
     setFormData({
       ...formData,
-      images: [...formData.images, ""],
+      images: formData.images.filter((_: string, idx: number) => idx !== i),
     });
+  const updateImage = (i: number, val: string) => {
+    const imgs = [...formData.images];
+    imgs[i] = val;
+    setFormData({ ...formData, images: imgs });
   };
 
-  const removeImage = (index: number) => {
+  /* ── Details helpers ── */
+  const addDetail = () =>
+    setFormData({ ...formData, details: [...formData.details, ""] });
+  const removeDetail = (i: number) =>
     setFormData({
       ...formData,
-      images: formData.images.filter((_: string, i: number) => i !== index),
+      details: formData.details.filter((_: string, idx: number) => idx !== i),
     });
+  const updateDetail = (i: number, val: string) => {
+    const d = [...formData.details];
+    d[i] = val;
+    setFormData({ ...formData, details: d });
   };
 
-  const updateImage = (index: number, value: string) => {
-    const newImages = [...formData.images];
-    newImages[index] = value;
-    setFormData({ ...formData, images: newImages });
+  /* ── Specs helpers ── */
+  const addSpec = () =>
+    setFormData({
+      ...formData,
+      specs: [...formData.specs, { label: "", value: "" }],
+    });
+  const removeSpec = (i: number) =>
+    setFormData({
+      ...formData,
+      specs: formData.specs.filter(
+        (_: { label: string; value: string }, idx: number) => idx !== i
+      ),
+    });
+  const updateSpec = (i: number, field: "label" | "value", val: string) => {
+    const s = [...formData.specs];
+    s[i] = { ...s[i], [field]: val };
+    setFormData({ ...formData, specs: s });
   };
 
   if (loading || !isAuthenticated || !formData) {
@@ -123,7 +161,11 @@ export default function EditProject() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white shadow px-4 py-5 sm:p-6">
+            {/* ── Basic info ── */}
+            <div className="bg-white shadow rounded-lg px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Informații generale
+              </h3>
               <div className="grid grid-cols-6 gap-6">
                 <div className="col-span-6 sm:col-span-3">
                   <label className="block text-sm font-medium text-gray-700">
@@ -151,6 +193,38 @@ export default function EditProject() {
                     value={formData.title}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="col-span-6 sm:col-span-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Categorie
+                  </label>
+                  <select
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                  >
+                    <option value="Rezidențial">Rezidențial</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Industrial">Industrial</option>
+                  </select>
+                </div>
+
+                <div className="col-span-6 sm:col-span-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Capacitate (ex: 20 kW)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    value={formData.capacity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, capacity: e.target.value })
                     }
                   />
                 </div>
@@ -214,10 +288,10 @@ export default function EditProject() {
                       setFormData({ ...formData, gridSize: e.target.value })
                     }
                   >
-                    <option value="1x1">1x1</option>
-                    <option value="2x1">2x1</option>
-                    <option value="1x2">1x2</option>
-                    <option value="2x2">2x2</option>
+                    <option value="normal">Normal</option>
+                    <option value="tall">Tall (înalt)</option>
+                    <option value="wide">Wide (lat)</option>
+                    <option value="large">Large (mare)</option>
                   </select>
                 </div>
 
@@ -239,7 +313,8 @@ export default function EditProject() {
               </div>
             </div>
 
-            <div className="bg-white shadow px-4 py-5 sm:p-6">
+            {/* ── Images ── */}
+            <div className="bg-white shadow rounded-lg px-4 py-5 sm:p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Imagini</h3>
                 <button
@@ -247,10 +322,9 @@ export default function EditProject() {
                   onClick={addImage}
                   className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                 >
-                  Adaugă imagine
+                  + Adaugă imagine
                 </button>
               </div>
-
               {formData.images.map((image: string, index: number) => (
                 <div key={index} className="mb-3">
                   <div className="flex gap-2 items-start">
@@ -273,6 +347,94 @@ export default function EditProject() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* ── Details (Ce am realizat) ── */}
+            <div className="bg-white shadow rounded-lg px-4 py-5 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Ce am realizat
+                </h3>
+                <button
+                  type="button"
+                  onClick={addDetail}
+                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                >
+                  + Adaugă detaliu
+                </button>
+              </div>
+              {formData.details.map((detail: string, index: number) => (
+                <div key={index} className="flex gap-2 items-center mb-3">
+                  <input
+                    type="text"
+                    className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    placeholder="ex: 36 panouri monocristaline 550W pe acoperiș metalic"
+                    value={detail}
+                    onChange={(e) => updateDetail(index, e.target.value)}
+                  />
+                  {formData.details.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeDetail(index)}
+                      className="px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* ── Specs (Specificații tehnice) ── */}
+            <div className="bg-white shadow rounded-lg px-4 py-5 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Specificații tehnice
+                </h3>
+                <button
+                  type="button"
+                  onClick={addSpec}
+                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                >
+                  + Adaugă specificație
+                </button>
+              </div>
+              {formData.specs.map(
+                (
+                  spec: { label: string; value: string },
+                  index: number
+                ) => (
+                  <div key={index} className="flex gap-2 items-center mb-3">
+                    <input
+                      type="text"
+                      className="w-1/3 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                      placeholder="Label (ex: Putere instalată)"
+                      value={spec.label}
+                      onChange={(e) =>
+                        updateSpec(index, "label", e.target.value)
+                      }
+                    />
+                    <input
+                      type="text"
+                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                      placeholder="Valoare (ex: 20 kW)"
+                      value={spec.value}
+                      onChange={(e) =>
+                        updateSpec(index, "value", e.target.value)
+                      }
+                    />
+                    {formData.specs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSpec(index)}
+                        className="px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                )
+              )}
             </div>
 
             <div className="flex justify-end">

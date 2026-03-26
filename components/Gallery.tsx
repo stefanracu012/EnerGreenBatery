@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import ScrollReveal from "./ScrollReveal";
-import { projects } from "@/lib/projects";
+import { prisma } from "@/lib/prisma";
 
 /** Map gridSize to Tailwind classes for the masonry grid */
 const sizeClasses: Record<string, string> = {
@@ -17,7 +17,11 @@ const categoryColors: Record<string, string> = {
   Industrial: "bg-blue-600/90",
 };
 
-export default function Gallery() {
+export default async function Gallery() {
+  const projects = await prisma.project.findMany({
+    orderBy: { year: "desc" },
+  });
+
   return (
     <section id="proiecte" className="py-16 lg:py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -49,7 +53,7 @@ export default function Gallery() {
                 className="group relative block h-full w-full rounded-2xl overflow-hidden"
               >
                 <Image
-                  src={project.image}
+                  src={project.images[0] || "/placeholder.jpg"}
                   alt={project.title}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"

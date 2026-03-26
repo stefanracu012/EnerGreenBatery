@@ -66,18 +66,27 @@ model Package {
   updatedAt         DateTime         @updatedAt
 }
 
+type ProjectSpec {
+  label String
+  value String
+}
+
 model Project {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  slug        String   @unique
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String        @unique
   title       String
+  category    String        @default("Rezidențial")
+  capacity    String        @default("")
   description String
   location    String
   year        Int
   images      String[]
-  gridSize    String   @default("1x1")
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  details     String[]
+  specs       ProjectSpec[]
+  gridSize    String        @default("normal")
+  featured    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model AdminUser {

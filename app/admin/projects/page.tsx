@@ -8,6 +8,8 @@ interface Project {
   id: string;
   slug: string;
   title: string;
+  category: string;
+  capacity: string;
   description: string;
   location: string;
   year: number;
@@ -173,10 +175,10 @@ export default function AdminProjects() {
                       {project.title}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {project.location} • {project.year}
+                      {project.category} • {project.capacity} • {project.year}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Grid: {project.gridSize} • {project.images.length} imagini
+                    <p className="text-sm text-gray-400">
+                      {project.location}
                     </p>
                     <div className="flex items-center space-x-2 mt-4">
                       <Link
