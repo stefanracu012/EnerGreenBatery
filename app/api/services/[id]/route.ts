@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(
   request: NextRequest,
@@ -75,6 +76,9 @@ export async function PUT(
       }
     })
 
+    revalidatePath('/')
+    revalidatePath(`/servicii/${slug}`)
+
     return NextResponse.json(service)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update service' }, { status: 500 })
@@ -90,6 +94,8 @@ export async function DELETE(
     await prisma.service.delete({
       where: { id }
     })
+
+    revalidatePath('/')
 
     return NextResponse.json({ success: true })
   } catch (error) {
