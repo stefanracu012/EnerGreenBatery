@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+import { ServiceJsonLd } from "@/components/JsonLd";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -22,9 +23,41 @@ export async function generateMetadata({
   const { slug } = await params;
   const service = await prisma.service.findUnique({ where: { slug } });
   if (!service) return {};
+
+  const title = `${service.title} — EnerGreenBatery`;
+  const description = service.description;
+  const url = `https://www.energreenbatery.ro/servicii/${slug}`;
+  const image = service.image || "/icon-512.png";
+
   return {
-    title: `${service.title} — EnerGreenBatery`,
-    description: service.description,
+    title: service.title,
+    description,
+    keywords: [
+      service.title,
+      "panouri solare",
+      "fotovoltaice",
+      "energie solară",
+      "EnerGreenBatery",
+      "Suceava",
+      "instalare",
+      "sisteme fotovoltaice",
+    ],
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      locale: "ro_RO",
+      url,
+      title,
+      description,
+      siteName: "EnerGreenBatery",
+      images: [{ url: image, width: 1200, height: 630, alt: service.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -66,6 +99,12 @@ export default async function ServicePage({ params }: PageProps) {
 
   return (
     <div>
+      <ServiceJsonLd
+        name={service.title}
+        description={service.description}
+        image={service.image || undefined}
+        url={`https://www.energreenbatery.ro/servicii/${slug}`}
+      />
       {/* Header */}
       <section className="relative h-[60vh] lg:h-[70vh] overflow-hidden">
         {service.image && (

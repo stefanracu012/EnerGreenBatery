@@ -333,7 +333,7 @@ export default function EditService() {
                     </button>
                   </div>
 
-                  <div className="p-5 space-y-6">
+                  <div className="p-3 sm:p-5 space-y-5">
                     {/* Basic fields */}
                     <div className="grid grid-cols-12 gap-4">
                       <div className="col-span-12 sm:col-span-3">
@@ -350,7 +350,7 @@ export default function EditService() {
                           }
                         />
                       </div>
-                      <div className="col-span-4 sm:col-span-2">
+                      <div className="col-span-6 sm:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           KW
                         </label>
@@ -368,7 +368,7 @@ export default function EditService() {
                           }
                         />
                       </div>
-                      <div className="col-span-4 sm:col-span-2">
+                      <div className="col-span-6 sm:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Echipamente (€)
                         </label>
@@ -386,7 +386,7 @@ export default function EditService() {
                           }
                         />
                       </div>
-                      <div className="col-span-4 sm:col-span-2">
+                      <div className="col-span-6 sm:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Instalare (€)
                         </label>
@@ -403,7 +403,7 @@ export default function EditService() {
                           }
                         />
                       </div>
-                      <div className="col-span-12 sm:col-span-3">
+                      <div className="col-span-6 sm:col-span-3">
                         <label className="block text-sm font-medium text-gray-500 mb-1">
                           Total pachet (€)
                         </label>
@@ -453,9 +453,9 @@ export default function EditService() {
                       </label>
                     </div>
 
-                    {/* ── Produse (tabel) ── */}
+                    {/* ── Produse ── */}
                     <div className="border-t border-gray-200 pt-5">
-                      <div className="flex justify-between items-center mb-3">
+                      <div className="flex justify-between items-center mb-4">
                         <h4 className="text-sm font-semibold text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
                           <svg
                             className="w-4 h-4 text-green-600"
@@ -475,159 +475,153 @@ export default function EditService() {
                         <button
                           type="button"
                           onClick={() => addProduct(pkgIdx)}
-                          className="px-3 py-1 text-xs font-medium rounded-md text-green-700 border border-green-300 hover:bg-green-50"
+                          className="px-4 py-2 text-sm font-medium rounded-md text-green-700 border border-green-300 hover:bg-green-50"
                         >
                           + Adaugă produs
                         </button>
                       </div>
 
-                      {pkg.products.length > 0 && (
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-3 py-2 text-left font-medium text-gray-600">
+                      <div className="space-y-3">
+                        {pkg.products.map((prod, pIdx) => (
+                          <div
+                            key={pIdx}
+                            className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4"
+                          >
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-xs font-bold text-gray-400 uppercase">
+                                Produs {pIdx + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeProduct(pkgIdx, pIdx)}
+                                className="px-2.5 py-1.5 text-xs font-medium rounded text-red-600 border border-red-200 hover:bg-red-50"
+                                title="Șterge produs"
+                              >
+                                ✕ Șterge
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
                                   Produs
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-600">
+                                </label>
+                                <input
+                                  type="text"
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-base sm:text-sm sm:py-2 focus:ring-green-500 focus:border-green-500"
+                                  value={prod.name}
+                                  onChange={(e) =>
+                                    updateProduct(
+                                      pkgIdx,
+                                      pIdx,
+                                      "name",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="ex: Panou fotovoltaic"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
                                   Specificație
-                                </th>
-                                <th className="px-3 py-2 text-right font-medium text-gray-600 w-20">
-                                  Cant.
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
-                                  Unit.
-                                </th>
-                                <th className="px-3 py-2 text-right font-medium text-gray-600 w-24">
+                                </label>
+                                <input
+                                  type="text"
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-base sm:text-sm sm:py-2 focus:ring-green-500 focus:border-green-500"
+                                  value={prod.spec}
+                                  onChange={(e) =>
+                                    updateProduct(
+                                      pkgIdx,
+                                      pIdx,
+                                      "spec",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="ex: 550W monocristalin"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                  Cantitate
+                                </label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-base sm:text-sm sm:py-2 text-right focus:ring-green-500 focus:border-green-500"
+                                  value={prod.quantity}
+                                  onChange={(e) =>
+                                    updateProduct(
+                                      pkgIdx,
+                                      pIdx,
+                                      "quantity",
+                                      parseFloat(e.target.value) || 0,
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                  Unitate
+                                </label>
+                                <input
+                                  type="text"
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-base sm:text-sm sm:py-2 focus:ring-green-500 focus:border-green-500"
+                                  value={prod.unit}
+                                  onChange={(e) =>
+                                    updateProduct(
+                                      pkgIdx,
+                                      pIdx,
+                                      "unit",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="buc"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
                                   Preț/u (€)
-                                </th>
-                                <th className="px-3 py-2 text-right font-medium text-gray-600 w-24">
+                                </label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-base sm:text-sm sm:py-2 text-right focus:ring-green-500 focus:border-green-500"
+                                  value={prod.unitPrice}
+                                  onChange={(e) =>
+                                    updateProduct(
+                                      pkgIdx,
+                                      pIdx,
+                                      "unitPrice",
+                                      parseFloat(e.target.value) || 0,
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
                                   Total (€)
-                                </th>
-                                <th className="px-3 py-2 w-10"></th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                              {pkg.products.map((prod, pIdx) => (
-                                <tr key={pIdx} className="hover:bg-gray-50">
-                                  <td className="px-2 py-1.5">
-                                    <input
-                                      type="text"
-                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
-                                      value={prod.name}
-                                      onChange={(e) =>
-                                        updateProduct(
-                                          pkgIdx,
-                                          pIdx,
-                                          "name",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="ex: Panou fotovoltaic"
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1.5">
-                                    <input
-                                      type="text"
-                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
-                                      value={prod.spec}
-                                      onChange={(e) =>
-                                        updateProduct(
-                                          pkgIdx,
-                                          pIdx,
-                                          "spec",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="ex: 550W monocristalin"
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1.5">
-                                    <input
-                                      type="number"
-                                      step="any"
-                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-green-500 focus:border-green-500"
-                                      value={prod.quantity}
-                                      onChange={(e) =>
-                                        updateProduct(
-                                          pkgIdx,
-                                          pIdx,
-                                          "quantity",
-                                          parseFloat(e.target.value) || 0,
-                                        )
-                                      }
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1.5">
-                                    <input
-                                      type="text"
-                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
-                                      value={prod.unit}
-                                      onChange={(e) =>
-                                        updateProduct(
-                                          pkgIdx,
-                                          pIdx,
-                                          "unit",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="buc"
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1.5">
-                                    <input
-                                      type="number"
-                                      step="any"
-                                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-green-500 focus:border-green-500"
-                                      value={prod.unitPrice}
-                                      onChange={(e) =>
-                                        updateProduct(
-                                          pkgIdx,
-                                          pIdx,
-                                          "unitPrice",
-                                          parseFloat(e.target.value) || 0,
-                                        )
-                                      }
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1.5">
-                                    <div className="w-full bg-gray-100 border border-gray-200 rounded px-2 py-1 text-sm text-right font-medium text-gray-700">
-                                      {prod.totalPrice.toLocaleString("ro-RO")}
-                                    </div>
-                                  </td>
-                                  <td className="px-1 py-1.5 text-center">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        removeProduct(pkgIdx, pIdx)
-                                      }
-                                      className="text-red-500 hover:text-red-700 text-lg leading-none"
-                                      title="Șterge produs"
-                                    >
-                                      ✕
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                            <tfoot className="bg-green-50">
-                              <tr>
-                                <td
-                                  colSpan={5}
-                                  className="px-3 py-2 text-right font-semibold text-gray-700"
-                                >
-                                  Subtotal echipamente:
-                                </td>
-                                <td className="px-3 py-2 text-right font-bold text-green-700">
-                                  {pkg.products
-                                    .reduce((s, p) => s + p.totalPrice, 0)
-                                    .toLocaleString("ro-RO")}{" "}
-                                  €
-                                </td>
-                                <td></td>
-                              </tr>
-                            </tfoot>
-                          </table>
+                                </label>
+                                <div className="w-full bg-white border border-gray-200 rounded-md px-3 py-2.5 sm:py-2 text-base sm:text-sm text-right font-semibold text-green-700">
+                                  {prod.totalPrice.toLocaleString("ro-RO")}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {pkg.products.length > 0 && (
+                        <div className="mt-4 flex justify-end">
+                          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2.5 text-sm font-bold text-green-700">
+                            Subtotal echipamente:{" "}
+                            {pkg.products
+                              .reduce((s, p) => s + p.totalPrice, 0)
+                              .toLocaleString("ro-RO")}{" "}
+                            €
+                          </div>
                         </div>
                       )}
                     </div>

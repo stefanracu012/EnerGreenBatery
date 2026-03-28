@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+import { ProjectJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 60;
 
@@ -21,9 +22,41 @@ export async function generateMetadata({
   const { slug } = await params;
   const project = await prisma.project.findUnique({ where: { slug } });
   if (!project) return {};
+
+  const title = `${project.title} — EnerGreenBatery`;
+  const description = project.description;
+  const url = `https://www.energreenbatery.ro/proiecte/${slug}`;
+  const image = project.images?.[0] || "/icon-512.png";
+
   return {
-    title: `${project.title} — EnerGreenBatery`,
-    description: project.description,
+    title: project.title,
+    description,
+    keywords: [
+      project.title,
+      project.category || "fotovoltaice",
+      "proiect fotovoltaic",
+      "energie solară",
+      "EnerGreenBatery",
+      "Suceava",
+      project.location || "",
+      `${project.capacity || ""} kW`,
+    ].filter(Boolean),
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      locale: "ro_RO",
+      url,
+      title,
+      description,
+      siteName: "EnerGreenBatery",
+      images: [{ url: image, width: 1200, height: 630, alt: project.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -55,6 +88,13 @@ export default async function ProjectPage({ params }: PageProps) {
 
   return (
     <div>
+      <ProjectJsonLd
+        name={project.title}
+        description={project.description}
+        images={project.images}
+        url={`https://www.energreenbatery.ro/proiecte/${slug}`}
+        location={project.location || undefined}
+      />
       {/* Hero image */}
       <section className="relative h-[60vh] lg:h-[70vh] overflow-hidden">
         <Image

@@ -1,21 +1,32 @@
 {
-  "name": "EnerGreenBatery",
+  "name": "EnerGreenBatery — Energie solară pentru viitorul tău",
   "short_name": "EnerGreen",
-  "description": "Soluții fotovoltaice complete pentru case și afaceri.",
+  "description": "Soluții fotovoltaice complete pentru case și afaceri. Panouri solare, invertoare, baterii de stocare, instalare profesională și mentenanță.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#019444",
+  "lang": "ro",
+  "categories": ["business", "utilities"],
   "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
