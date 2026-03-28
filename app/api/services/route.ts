@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sanitizeSlug } from '@/lib/slug'
 
 export async function GET() {
   try {
@@ -16,7 +17,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { slug, title, description, icon, image, packages } = await request.json()
+    const body = await request.json()
+    const { title, description, icon, image, packages } = body
+    const slug = sanitizeSlug(body.slug || '')
+    if (!slug) return NextResponse.json({ error: 'Slug invalid' }, { status: 400 })
 
     const service = await prisma.service.create({
       data: {

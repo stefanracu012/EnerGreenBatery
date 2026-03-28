@@ -172,10 +172,17 @@ export default function EditProject() {
                   <input
                     type="text"
                     required
+                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                    title="Doar litere mici, cifre și cratime (ex: casa-modesta)"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                     value={formData.slug}
                     onChange={(e) =>
-                      setFormData({ ...formData, slug: e.target.value })
+                      setFormData({
+                        ...formData,
+                        slug: e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, ""),
+                      })
                     }
                   />
                 </div>

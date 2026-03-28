@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { sanitizeSlug } from '@/lib/slug'
 
 export async function GET() {
   try {
@@ -15,7 +16,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { slug, title, category, capacity, description, location, year, images, details, specs, gridSize, featured } = await request.json()
+    const body = await request.json()
+    const { title, category, capacity, description, location, year, images, details, specs, gridSize, featured } = body
+    const slug = sanitizeSlug(body.slug || '')
+    if (!slug) return NextResponse.json({ error: 'Slug invalid' }, { status: 400 })
 
     const project = await prisma.project.create({
       data: {

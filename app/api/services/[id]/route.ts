@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { sanitizeSlug } from '@/lib/slug'
 
 export async function GET(
   request: NextRequest,
@@ -31,7 +32,10 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const { slug, title, description, icon, image, packages } = await request.json()
+    const body = await request.json()
+    const { title, description, icon, image, packages } = body
+    const slug = sanitizeSlug(body.slug || '')
+    if (!slug) return NextResponse.json({ error: 'Slug invalid' }, { status: 400 })
 
     // Delete existing packages
     await prisma.package.deleteMany({
