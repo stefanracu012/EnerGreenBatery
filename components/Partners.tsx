@@ -36,10 +36,10 @@ export default function Partners() {
           {all.map(({ id, Logo, label }, i) => (
             <div
               key={`${id}-${i}`}
-              className="flex items-center justify-center h-10 min-w-[140px] text-gray-400 hover:text-primary transition-colors duration-300"
+              className="flex items-center justify-center min-w-fit text-gray-400 hover:text-primary transition-colors duration-300"
               title={label}
             >
-              <Logo className="h-8 w-auto max-w-[140px]" />
+              <Logo className="text-xl leading-none" />
             </div>
           ))}
         </div>
